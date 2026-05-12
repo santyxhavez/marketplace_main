@@ -1,6 +1,3 @@
-from django.db import models
-
-# Create your models here.
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -34,8 +31,8 @@ class Category(models.Model):
 class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150)
-    image = models.CharField(max_length=2000)
     description = models.TextField()
+    image = models.ImageField(upload_to='upload/', blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
 
@@ -79,6 +76,11 @@ class Cart(models.Model):
     def __str__(self):
         return f"Cart {self.id} - {self.user}"
 
+    # Actualizar
+    @property
+    def total(self):
+        return sum(item.subtotal for item in self.cartitem_set.all())
+
 
 # =========================
 # 🧾 CartItem (tabla intermedia)
@@ -93,6 +95,11 @@ class CartItem(models.Model):
 
     class Meta:
         unique_together = ('cart', 'product')
+
+    # Actualizar
+    @property
+    def subtotal(self):
+        return self.product.price * self.quantity
 
     def __str__(self):
         return f"{self.product} x {self.quantity}"
